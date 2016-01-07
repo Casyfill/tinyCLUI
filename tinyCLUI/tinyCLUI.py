@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
 import os
+# TODO: would be great to have an option to print any condition for the question
 
 class TerminateError(Exception):
 	'''
@@ -89,6 +90,8 @@ def pathCondition(exist, filepath, frmt, default, create, qletter, dletter):
 
 	return checker
 
+
+
 def bcond(yletter,nletter,qletter,default):
 	'''boolean conditioning'''
 
@@ -102,6 +105,35 @@ def bcond(yletter,nletter,qletter,default):
 
 	return checker
 
+
+
+def	intCondition(custom_condition, qletter, default):
+	'''integer conditioner'''
+	# TODO: add few custom int condition helpers
+	
+	def checker(r):
+		if r==qletter:
+			return True
+
+		elif default!=None and  r == '':
+			result = True
+			
+
+		else:
+			try:
+				x = int(r)
+				result = True
+			except:
+				result = False
+
+		if custom_condition:
+			return result and custom_condition(r)
+		else:
+			return result
+
+	return checker
+
+# TODO: add few custom float condition helpers
 
 def infQuestion(question, condition, exitOnError):
 	'''asking strategy'''
@@ -169,11 +201,12 @@ def askForAnswer(options, question='Please, chouse your answer, Q to exit:', con
 	
 
 @terminator
-def askForPath(question='Please, provide a path, Q to exit:', exist=True, filepath=True, frmt=None, default=None, exitOnError=False, create=False, qletter='Q', dletter='D'):
+def askForPath(question='Please, provide a path, Q to exit, enter to skip(use default):', exist=True, filepath=True, frmt=None, default=None, exitOnError=False, create=False, qletter='Q'):
 	'''ask user to input the path to folder or file'''
 	# TODO: allow custom conditions to be made, for example if files inside folder are requred
 	# TODO: split to askForFolder, askForFile
-
+	dletter = ''
+	
 	if default:
 		question = question + ' or pass %s for default.\nDefault option: %s' % (dletter, str(default))
 	
@@ -190,17 +223,36 @@ def askForPath(question='Please, provide a path, Q to exit:', exist=True, filepa
 @terminator
 def askBoolean(question='Did you stop drinking cognac in the mornings?', default=None, yletter='y', nletter='n', qletter = 'Q', exitOnError=False):
 	'''returns True or False'''
-	question = question + '\nyes (*) or no(#), Q to exit, enter to skip:'
+	question = '\n' + question + '\nyes (*) or no(#), Q to exit, enter to skip(use default):'
 	question = question.replace('*', yletter).replace('#',nletter)
 
 	condition = bcond(yletter,nletter,qletter,default)
 	r = infQuestion(question, condition, exitOnError)
 
-	return {'':default,
+	result =  {'':default,
 	        yletter: True,
 	        nletter: False,
 	        qletter: qletter}[r]
+	print 'Chosen: ', result
+	return result
 
+
+@terminator
+def askInt(question='How old are you?', default=None, custom_condition=None, qletter = 'Q', exitOnError=False):
+	'''returns True or False'''
+	
+	condition = intCondition(custom_condition, qletter, default)
+	r = infQuestion(question, condition, exitOnError)
+	
+	if default and r=='':
+		print 'Chosen:', default
+		return default
+	elif r==qletter:
+		return r
+	else:
+		return int(r)
+
+# TODO: add askFloat
 
 
 def test():
@@ -223,7 +275,9 @@ def test():
 	# 				 create=True
 	# 				 )
 
-	print askBoolean('Did you stop drinking cognac in the mornings?', default=False)
+	# print askBoolean('Did you stop drinking cognac in the mornings?', default=False)
+
+	print askInt('How old are you?')
 
 
 
