@@ -7,6 +7,7 @@ class TerminateError(Exception):
 	Process terminate error - helps exit the process 
 	if exit notation was entered
 	'''
+	# TODO: replace D with enter as a default passkey
 
 	def __init__(self, qletter='Q', eString=' was entered, Process Terminated'):
 		self.qletter=qletter
@@ -21,7 +22,7 @@ def terminator(f, qletter='Q'):
 		
 		try:
 			r = f(*args, **kwargs)
-			if qletter in r:
+			if qletter==r:
 				raise TerminateError(qletter=qletter)
 			return r
 		except TerminateError, e:
@@ -85,6 +86,19 @@ def pathCondition(exist, filepath, frmt, default, create, qletter, dletter):
 			# NOTE: a flaw - user can pass total nonsence and get True on checker
 			result = True
 		return result
+
+	return checker
+
+def bcond(yletter,nletter,qletter,default):
+	'''boolean conditioning'''
+
+	def checker(r):
+		if default!=None:
+			opts = ('', yletter, nletter,qletter)
+		else:
+			opts = ( yletter, nletter,qletter)
+
+		return r in opts
 
 	return checker
 
@@ -155,8 +169,10 @@ def askForAnswer(options, question='Please, chouse your answer, Q to exit:', con
 	
 
 @terminator
-def askForPath(question='Please, provide a path', exist=True, filepath=True, frmt=None, default=None, exitOnError=False, create=False, qletter='Q', dletter='D'):
+def askForPath(question='Please, provide a path, Q to exit:', exist=True, filepath=True, frmt=None, default=None, exitOnError=False, create=False, qletter='Q', dletter='D'):
 	'''ask user to input the path to folder or file'''
+	# TODO: allow custom conditions to be made, for example if files inside folder are requred
+	# TODO: split to askForFolder, askForFile
 
 	if default:
 		question = question + ' or pass %s for default.\nDefault option: %s' % (dletter, str(default))
@@ -171,6 +187,19 @@ def askForPath(question='Please, provide a path', exist=True, filepath=True, frm
 	else:
 		return r
 
+@terminator
+def askBoolean(question='Did you stop drinking cognac in the mornings?', default=None, yletter='y', nletter='n', qletter = 'Q', exitOnError=False):
+	'''returns True or False'''
+	question = question + '\nyes (*) or no(#), Q to exit, enter to skip:'
+	question = question.replace('*', yletter).replace('#',nletter)
+
+	condition = bcond(yletter,nletter,qletter,default)
+	r = infQuestion(question, condition, exitOnError)
+
+	return {'':default,
+	        yletter: True,
+	        nletter: False,
+	        qletter: qletter}[r]
 
 
 
@@ -178,21 +207,24 @@ def test():
 	'''testing the functional'''
 	print 'Test'
 
-	print askForAnswer(['I like TinyCLUI','I dont like TinyCLUI'])
+	# print askForAnswer(['I like TinyCLUI','I dont like TinyCLUI'])
 
-	print askForAnswer({'NY': 'New York', 'Al':'Alabama'},'Which State are you living in?')
+	# print askForAnswer({'NY': 'New York', 'Al':'Alabama'},'Which State are you living in?')
 
-	print askForPath(exist=True, 
-					 filepath=True,
-					 frmt='.png',
-					 default='/Users/casy/Dropbox/Screenshots/Screenshot 2015-10-03 12.41.28.png',
-					 )
-	#  ask for directory
-	print askForPath(question = 'Please, provide existing or new directory to use',
-					 exist=False, 
-					 filepath=False,
-					 create=True
-					 )
+	# print askForPath(exist=True, 
+	# 				 filepath=True,
+	# 				 frmt='.png',
+	# 				 default='/Users/casy/Dropbox/Screenshots/Screenshot 2015-10-03 12.41.28.png',
+	# 				 )
+	# #  ask for directory
+	# print askForPath(question = 'Please, provide existing or new directory to use',
+	# 				 exist=False, 
+	# 				 filepath=False,
+	# 				 create=True
+	# 				 )
+
+	print askBoolean('Did you stop drinking cognac in the mornings?', default=False)
+
 
 
 if __name__ == '__main__':

@@ -17,7 +17,7 @@ r = askForAnswer(['I like TinyCLUI','I dont like TinyCLUI'])
 ```
 
 ## Dependencies
-script is designed for python 2.7 and requies nothing but `sys` module
+script is designed for python 2.7 and requies nothing but `os` module
 
 ## Example
 
