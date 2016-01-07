@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-
+import os
 
 class TerminateError(Exception):
 	'''
@@ -18,7 +18,6 @@ class TerminateError(Exception):
 
 def terminator(f, qletter='Q'):
 	def inner(*args, **kwargs):
-		print args, kwargs
 		
 		try:
 			r = f(*args, **kwargs)
@@ -28,6 +27,7 @@ def terminator(f, qletter='Q'):
 		except TerminateError, e:
 			print
 			print str(e)
+			exit()
 
 	return inner
 
@@ -43,13 +43,74 @@ def lcond(options, qletter):
 	return checker
 
 def kcond(options, qletter):
-	'''return checker if result in the option index'''
+	'''return checker if result in the option keys'''
 	l = [str(x) for x in options.keys()]
 	
 	def checker(r):
 		return (r==qletter) or (r in l)
 	return checker
 
+def pathCondition(exist, filepath, frmt, default, create, qletter, dletter):
+	'''return checker if result path is valid'''
+
+	def checker(r):
+		'''TODO: should rise error with explanation'''
+		r = r.strip()
+
+		if r == qletter:
+			return True
+
+		
+		# check/use default option
+		if default and r==dletter:
+			print 'Default option chosen: ', default
+			r = default
+
+		if not filepath: #directory
+			result = os.path.isdir(r)
+			
+			if result==False and create==True:
+				# TODO :should print a create option
+				os.makedirs(r)
+				result = True
+					
+		else:
+			result = os.path.exists(r)
+
+			if frmt!=None:
+				result = result and r.endswith(frmt)
+
+		
+		if exist:
+			# NOTE: a flaw - user can pass total nonsence and get True on checker
+			result = True
+		return result
+
+	return checker
+
+
+def infQuestion(question, condition, exitOnError):
+	'''asking strategy'''
+
+	if exitOnError==True:
+		r = raw_input(question + '\n')
+		if condition(r):
+			return r
+		else:
+			print 'answer is invalid. passing'
+			return None
+
+	elif exitOnError==False:
+		while True:
+			r = raw_input(question + '\n')
+			if condition(r):
+				return r
+			else:
+				print 'answer is invalid. try again!'
+	elif type(exitOnError)== int and exitOnError>0:
+		# TODO: Implement
+		# TODO: create Not-Implemented error
+		print 'Not Implemented yet'
 
 @terminator
 def askForAnswer(options, question='Please, chouse your answer, Q to exit:', condition=None, exitOnError=False, qletter='Q'):
@@ -88,26 +149,55 @@ def askForAnswer(options, question='Please, chouse your answer, Q to exit:', con
 		for k,v in options.iteritems():
 			print '%s. %s' % (str(k), v)
 
-	if exitOnError==True:
-		r = raw_input(question)
-		if condition(r):
-			return r
-		else:
-			print 'answer is invalid. passing'
-			pass
-	elif exitOnError==False:
-		while True:
-			r = raw_input(question)
-			if condition(r):
-				return r
-			else:
-				print 'answer is invalid. try again!'
+	return infQuestion(question, condition, exitOnError)
+	
 
 	
 
+@terminator
+def askForPath(question='Please, provide a path', exist=True, filepath=True, frmt=None, default=None, exitOnError=False, create=False, qletter='Q', dletter='D'):
+	'''ask user to input the path to folder or file'''
+
+	if default:
+		question = question + ' or pass %s for default.\nDefault option: %s' % (dletter, str(default))
+	
+	condition = pathCondition(exist, filepath, frmt, default, create, qletter, dletter) 
+
+	r = infQuestion(question, condition, exitOnError)
+
+	# NOTE: should be a more clean way to do that (inside infQuestion?)
+	if r == dletter:
+		return default
+	else:
+		return r
+
+
+
+
+def test():
+	'''testing the functional'''
+	print 'Test'
+
+	print askForAnswer(['I like TinyCLUI','I dont like TinyCLUI'])
+
+	print askForAnswer({'NY': 'New York', 'Al':'Alabama'},'Which State are you living in?')
+
+	print askForPath(exist=True, 
+					 filepath=True,
+					 frmt='.png',
+					 default='/Users/casy/Dropbox/Screenshots/Screenshot 2015-10-03 12.41.28.png',
+					 )
+	#  ask for directory
+	print askForPath(question = 'Please, provide existing or new directory to use',
+					 exist=False, 
+					 filepath=False,
+					 create=True
+					 )
+
 
 if __name__ == '__main__':
-	print 'test'
-	opt = {'f':'foo','b':'bar','0':'banana'}
-	result = askForAnswer(opt)
-	print opt[result]
+	test()
+
+
+
+	

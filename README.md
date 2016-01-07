@@ -28,6 +28,16 @@ print askForAnswer(['I like TinyCLUI','I dont like TinyCLUI'])
 
 print askForAnswer({'NY': 'New York', 'Al':'Alabama'},'Which State are you living in?')
 
+print askForPath(exist=True, 
+				 filepath=True,
+				 frmt='.png',
+				 default='/Users/casy/Dropbox/Screenshots/Screenshot 2015-10-03 12.41.28.png',
+				 )
+
+#  ask for directory
+print askForPath(question = 'Please, provide existing or new directory to use',exist=False, filepath=False, create=True )
+
+
 ```
 
 ## LOG
